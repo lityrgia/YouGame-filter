@@ -2,7 +2,14 @@
   const THREAD_CACHE_VERSION = 6;
   const styleId = 'ygff-early-filter';
 
-  document.documentElement.classList.add('ygff-mosaic-preparing');
+  function isFilteredPage() {
+    const path = location.pathname;
+    return path === '/' || path === '/featured/' || /^\/whats-new\/(?:$|posts(?:\/\d+)?\/?$|latest-activity\/?$)/.test(path);
+  }
+
+  // Лента раскрывается только после того, как основной скрипт проверит и
+  // отфильтрует даже темы, которых ещё нет в кэше.
+  if (isFilteredPage()) document.documentElement.classList.add('ygff-feed-preparing');
 
   function recalculateMosaic(hiddenThreadIds) {
     let visibleIndex = 0;
@@ -33,26 +40,19 @@
       }
 
       let scheduled = false;
-      let initialMosaicApplied = false;
       const scheduleMosaic = () => {
         if (scheduled) return;
         scheduled = true;
         queueMicrotask(() => {
           scheduled = false;
           recalculateMosaic(hiddenThreadIds);
-          if (!initialMosaicApplied) {
-            initialMosaicApplied = true;
-            document.documentElement.classList.remove('ygff-mosaic-preparing');
-          }
         });
       };
       const observer = new MutationObserver(scheduleMosaic);
       observer.observe(document.documentElement, { childList: true, subtree: true });
       window.addEventListener('load', () => observer.disconnect(), { once: true });
       scheduleMosaic();
-    } catch {
-      document.documentElement.classList.remove('ygff-mosaic-preparing');
-    }
+    } catch {}
   }
 
   applyEarlyFilter();

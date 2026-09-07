@@ -2,7 +2,7 @@
   const FORUM_URL = /^\/forums\/(\d+)(?:\/|$)/;
   const CREATE_THREAD_URL = /^\/forums\/(\d+)\/(?:create-thread|post-thread)(?:\/|$)/;
   const THREAD_URL = /\/threads\/(\d+)(?:\/|$)/;
-  const CACHE_TTL = 1000 * 60 * 60 * 12;
+  const CACHE_TTL = 1000 * 60 * 60 * 24 * 7;
   const THREAD_CACHE_VERSION = 6;
   const DEFAULT_IGNORED_FORUMS = [
     { id: '853', title: 'Исходники читов Minecraft' },
@@ -16,6 +16,8 @@
   const resolving = new Set();
   let refreshTimer;
   let bridgeAvailable = false;
+  let refreshInProgress = false;
+  let refreshQueued = false;
 
   function pathOf(link) {
     try { return new URL(link.href, location.origin).pathname; } catch { return ''; }
@@ -124,14 +126,23 @@
 
   async function filterThreads() {
     if (!isFilteredPage()) return;
-    const items = document.querySelectorAll('.item--thread, .structItem--thread, [data-thread-id], .threadItem');
-    for (const item of items) {
+    document.documentElement.classList.add('ygff-feed-preparing');
+    const items = [...document.querySelectorAll('.item--thread, .structItem--thread, [data-thread-id], .threadItem')];
+    let nextItem = 0;
+    const filterItem = async () => {
+      const item = items[nextItem++];
+      if (!item) return;
       const threadId = threadIdFromItem(item);
-      if (!threadId) continue;
+      if (!threadId) return;
       const previewUrl = item.querySelector('[data-preview-url]')?.getAttribute('data-preview-url');
       const forumId = await resolveThreadForum(threadId, previewUrl);
       item.classList.toggle('ygff-hidden-thread', Boolean(forumId && ignoredForumIds.has(forumId)));
-    }
+    };
+    // Первичная проверка идёт параллельно, но с небольшим лимитом запросов,
+    // чтобы не растягивать скрытое состояние ленты на десятки секунд.
+    await Promise.all(Array.from({ length: Math.min(6, items.length) }, async () => {
+      while (nextItem < items.length) await filterItem();
+    }));
     recalculateMosaic();
   }
 
@@ -191,20 +202,34 @@
   }
 
   async function refresh() {
-    // page-bridge.js загружается из manifest в MAIN world ещё на document_start.
-    bridgeAvailable = true;
-    const ignoredForums = await getIgnoredForums();
-    const cache = await chrome.storage.local.get(['threadForums', 'threadForumCacheVersion']);
-    const cachedThreads = cache.threadForumCacheVersion === THREAD_CACHE_VERSION ? (cache.threadForums || {}) : {};
-    if (cache.threadForumCacheVersion !== THREAD_CACHE_VERSION) {
-      await chrome.storage.local.set({ threadForums: {}, threadForumCacheVersion: THREAD_CACHE_VERSION });
+    if (refreshInProgress) {
+      refreshQueued = true;
+      return;
     }
-    ignoredForumIds = new Set(ignoredForums.map((forum) => String(forum.id)));
-    threadForums = cachedThreads;
-    await filterThreads();
-    // Ранний фильтр нужен только до загрузки; далее список обновляет основной скрипт.
-    document.getElementById('ygff-early-filter')?.remove();
-    addForumButton();
+    refreshInProgress = true;
+    // page-bridge.js загружается из manifest в MAIN world ещё на document_start.
+    try {
+      bridgeAvailable = true;
+      const ignoredForums = await getIgnoredForums();
+      const cache = await chrome.storage.local.get(['threadForums', 'threadForumCacheVersion']);
+      const cachedThreads = cache.threadForumCacheVersion === THREAD_CACHE_VERSION ? (cache.threadForums || {}) : {};
+      if (cache.threadForumCacheVersion !== THREAD_CACHE_VERSION) {
+        await chrome.storage.local.set({ threadForums: {}, threadForumCacheVersion: THREAD_CACHE_VERSION });
+      }
+      ignoredForumIds = new Set(ignoredForums.map((forum) => String(forum.id)));
+      threadForums = cachedThreads;
+      await filterThreads();
+      // Ранний фильтр нужен только до загрузки; далее список обновляет основной скрипт.
+      document.getElementById('ygff-early-filter')?.remove();
+      addForumButton();
+    } finally {
+      document.documentElement.classList.remove('ygff-feed-preparing');
+      refreshInProgress = false;
+      if (refreshQueued) {
+        refreshQueued = false;
+        scheduleRefresh();
+      }
+    }
   }
 
   function scheduleRefresh() {
