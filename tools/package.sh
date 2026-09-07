@@ -4,7 +4,7 @@ set -euo pipefail
 target="${1:-all}"
 root_dir="$(cd "$(dirname "$0")/.." && pwd)"
 release_dir="$root_dir/release"
-files=(manifest.json early-filter.js content.js content.css page-bridge.js popup.html popup.js ui.css README.md)
+files=(manifest.json content.js content.css popup.html popup.js ui.css README.md)
 
 package_target() {
   local browser="$1"

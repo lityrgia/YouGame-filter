@@ -1,10 +1,10 @@
 {
   "name": "yougame-forum-filter",
-  "version": "2.4.2",
+  "version": "2.5.1",
   "private": true,
   "description": "Browser extension that filters selected YouGame forum sections.",
   "scripts": {
-    "check": "node --check early-filter.js && node --check content.js && node --check page-bridge.js && node --check popup.js",
+    "check": "node --check content.js && node --check popup.js",
     "package:chrome": "bash tools/package.sh chrome",
     "package:firefox": "bash tools/package.sh firefox",
     "package:all": "bash tools/package.sh all"

@@ -1,5 +1,6 @@
 const forumPath = /^\/forums\/(\d+)(?:\/|$)/;
 let currentForum = null;
+let renderVersion = 0;
 const DEFAULT_IGNORED_FORUMS = [
   { id: '853', title: 'Исходники читов Minecraft' },
   { id: '860', title: 'Бесплатные читы Роблокс (ПК&телефон)' },
@@ -21,7 +22,9 @@ async function settings() {
 }
 
 async function render() {
+  const version = ++renderVersion;
   const ignored = await settings();
+  if (version !== renderVersion) return;
   document.querySelector('#count').textContent = ignored.length;
   document.querySelector('#empty').hidden = ignored.length > 0;
   document.querySelector('#ignored-list').replaceChildren(...ignored.map((forum) => {
@@ -29,7 +32,15 @@ async function render() {
     li.innerHTML = `<span>${escapeHtml(forum.title || `Раздел ${forum.id}`)}</span>`;
     const remove = document.createElement('button');
     remove.className = 'icon-button'; remove.textContent = '×'; remove.title = 'Убрать из игнора';
-    remove.onclick = () => save(ignored.filter((entry) => String(entry.id) !== String(forum.id)));
+    remove.onclick = async () => {
+      if (remove.disabled) return;
+      remove.disabled = true;
+      try {
+        await save((await settings()).filter((entry) => String(entry.id) !== String(forum.id)));
+      } finally {
+        remove.disabled = false;
+      }
+    };
     li.append(remove); return li;
   }));
 
@@ -45,9 +56,17 @@ function escapeHtml(value) { const el = document.createElement('span'); el.textC
 async function save(ignoredForums) { await chrome.storage.local.set({ ignoredForums }); await render(); }
 
 document.querySelector('#toggle-current').onclick = async () => {
-  const ignored = await settings();
-  const found = ignored.some((forum) => String(forum.id) === currentForum.id);
-  await save(found ? ignored.filter((forum) => String(forum.id) !== currentForum.id) : [...ignored, currentForum]);
+  if (!currentForum) return;
+  const toggle = document.querySelector('#toggle-current');
+  if (toggle.disabled) return;
+  toggle.disabled = true;
+  try {
+    const ignored = await settings();
+    const found = ignored.some((forum) => String(forum.id) === currentForum.id);
+    await save(found ? ignored.filter((forum) => String(forum.id) !== currentForum.id) : [...ignored, currentForum]);
+  } finally {
+    toggle.disabled = false;
+  }
 };
 document.querySelector('#export').onclick = async () => {
   const ignoredForums = await settings();

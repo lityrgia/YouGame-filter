@@ -1,8 +1,11 @@
 .ygff-hidden-thread { display: none !important; }
 
-/* Лента раскрывается только после полной первичной проверки тем. */
-html.ygff-feed-preparing .fsp .tabGroup.tabGroup--threads .tabGroup-content {
-  visibility: hidden;
+.fsp .tabGroup.tabGroup--threads .tabGroup-content .item--thread.ygff-row-light {
+  background: #2E3B42 !important;
+}
+
+.fsp .tabGroup.tabGroup--threads .tabGroup-content .item--thread.ygff-row-dark {
+  background: transparent !important;
 }
 
 .ygff-ignore-button {
