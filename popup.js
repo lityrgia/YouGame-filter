@@ -1,16 +1,22 @@
 const forumPath = /^\/forums\/(\d+)(?:\/|$)/;
 let currentForum = null;
-const INITIAL_IGNORED_FORUMS = [
-  { id: '1178', title: 'Майнкрафт' },
-  { id: '1444', title: 'ИИ' }
+const DEFAULT_IGNORED_FORUMS = [
+  { id: '853', title: 'Исходники читов Minecraft' },
+  { id: '860', title: 'Бесплатные читы Роблокс (ПК&телефон)' },
+  { id: '1179', title: 'Маркетплейс Minecraft' }
 ];
+const DEFAULTS_VERSION = 2;
+const PREVIOUS_DEFAULT_IDS = new Set(['1178', '1444']);
 
 async function settings() {
-  const data = await chrome.storage.local.get(['ignoredForums', 'initialIgnoredForumsAdded']);
-  if (data.initialIgnoredForumsAdded) return data.ignoredForums || [];
-  const ignoredForums = [...new Map([...(data.ignoredForums || []), ...INITIAL_IGNORED_FORUMS]
+  const data = await chrome.storage.local.get(['ignoredForums', 'defaultIgnoredForumsVersion']);
+  if (data.defaultIgnoredForumsVersion >= DEFAULTS_VERSION) return data.ignoredForums || [];
+  const previousForums = (data.ignoredForums || []).filter(
+    (forum) => !PREVIOUS_DEFAULT_IDS.has(String(forum.id))
+  );
+  const ignoredForums = [...new Map([...previousForums, ...DEFAULT_IGNORED_FORUMS]
     .map((forum) => [String(forum.id), forum])).values()];
-  await chrome.storage.local.set({ ignoredForums, initialIgnoredForumsAdded: true });
+  await chrome.storage.local.set({ ignoredForums, defaultIgnoredForumsVersion: DEFAULTS_VERSION });
   return ignoredForums;
 }
 

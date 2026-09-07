@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "YouGame Forum Filter",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "Скрывает темы из выбранных разделов YouGame.",
   "minimum_chrome_version": "102",
   "permissions": ["storage"],
