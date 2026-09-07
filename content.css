@@ -1,0 +1,11 @@
+.ygff-hidden-thread { display: none !important; }
+
+/* The early script reveals this only after applying the first mosaic pass. */
+html.ygff-mosaic-preparing .fsp .tabGroup.tabGroup--threads .tabGroup-content {
+  visibility: hidden;
+}
+
+.ygff-ignore-button {
+  margin-right: 8px !important;
+  cursor: pointer;
+}

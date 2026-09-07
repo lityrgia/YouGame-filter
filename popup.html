@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="ru">
+  <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="ui.css"><title>Фильтр YouGame</title></head>
+  <body class="popup">
+    <main>
+      <h1>Фильтр YouGame</h1>
+      <button id="toggle-current" class="primary" hidden></button>
+      <section>
+        <div class="section-heading"><h2>Игнорируемые разделы</h2><span id="count" class="badge">0</span></div>
+        <ul id="ignored-list" class="item-list"></ul>
+        <p id="empty" class="muted">Пока ничего не игнорируется.</p>
+      </section>
+      <section class="data-tools">
+        <button id="export" class="secondary">Экспорт</button>
+        <label class="import-button secondary">Импорт<input id="import" type="file" accept="application/json,.json"></label>
+      </section>
+      <p id="status" class="status" role="status"></p>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>

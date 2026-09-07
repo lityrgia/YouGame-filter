@@ -1,0 +1,41 @@
+{
+  "manifest_version": 3,
+  "name": "YouGame Forum Filter",
+  "version": "2.3.0",
+  "description": "Скрывает темы из выбранных разделов YouGame.",
+  "permissions": ["storage"],
+  "host_permissions": ["https://yougame.biz/*", "https://www.yougame.biz/*"],
+  "action": {
+    "default_title": "Фильтр YouGame",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://yougame.biz/*", "https://www.yougame.biz/*"],
+      "css": ["content.css"],
+      "run_at": "document_start"
+    },
+    {
+      "matches": ["https://yougame.biz/*", "https://www.yougame.biz/*"],
+      "js": ["early-filter.js"],
+      "run_at": "document_start"
+    },
+    {
+      "matches": ["https://yougame.biz/*", "https://www.yougame.biz/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://yougame.biz/*", "https://www.yougame.biz/*"],
+      "js": ["page-bridge.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    }
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "yougame-forum-filter@yougame.biz",
+      "strict_min_version": "121.0"
+    }
+  }
+}

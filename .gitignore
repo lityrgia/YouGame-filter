@@ -1,0 +1,14 @@
+# Packaged extension; load the folder itself in chrome://extensions.
+*.zip
+*.xpi
+release/
+
+# Local editor and operating-system files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Dependencies and test artefacts
+node_modules/
+coverage/
