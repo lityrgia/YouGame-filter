@@ -4,7 +4,7 @@ set -euo pipefail
 target="${1:-all}"
 root_dir="$(cd "$(dirname "$0")/.." && pwd)"
 release_dir="$root_dir/release"
-files=(manifest.json early-filter.js content.js content.css page-bridge.js popup.html popup.js ui.css README.md LICENSE PRIVACY.md)
+files=(manifest.json early-filter.js content.js content.css page-bridge.js popup.html popup.js ui.css README.md)
 
 package_target() {
   local browser="$1"
@@ -21,8 +21,10 @@ package_target() {
   done
   if [[ "$browser" == "firefox" ]]; then
     cp "$root_dir/manifests/firefox.json" "$stage_dir/manifest.json"
+    rm -f "$archive.xpi"
     (cd "$stage_dir" && zip -qr "$archive.xpi" .)
   else
+    rm -f "$archive.zip"
     (cd "$stage_dir" && zip -qr "$archive.zip" .)
   fi
 }
